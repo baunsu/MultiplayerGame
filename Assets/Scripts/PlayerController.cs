@@ -27,6 +27,6 @@ public class PlayerController : MonoBehaviour
     {
         // Handles player movement
         Vector2 move = new Vector2(movementInput.x, movementInput.y).normalized;
-        rb.velocity = playerSpeed * move;
+        rb.linearVelocity = playerSpeed * move;
     }
 }
