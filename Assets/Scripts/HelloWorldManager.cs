@@ -128,14 +128,12 @@ public class HelloWorldManager : MonoBehaviour
             {
                 var playerObject = NetworkManager.Singleton.SpawnManager.GetPlayerNetworkObject(uid);
                 var player = playerObject.GetComponent<PlayerControls>();
-                player.Move();
             }
         }
         else if (NetworkManager.Singleton.IsClient)
         {
             var playerObject = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
             var player = playerObject.GetComponent<PlayerControls>();
-            player.Move();
         }
     }
 }
