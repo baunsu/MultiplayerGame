@@ -9,9 +9,8 @@ public class HelloWorldManager : MonoBehaviour
     VisualElement rootVisualElement;
     Button hostButton;
     Button clientButton;
-    Button serverButton;
-    Label statusLabel;
 
+    // Creates the buttons for host and client joining
     void OnEnable()
     {
         var uiDocument = GetComponent<UIDocument>();
@@ -19,18 +18,13 @@ public class HelloWorldManager : MonoBehaviour
 
         hostButton = CreateButton("HostButton", "Host");
         clientButton = CreateButton("ClientButton", "Client");
-        serverButton = CreateButton("ServerButton", "Server");
-        statusLabel = CreateLabel("StatusLabel", "Not Connected");
 
         rootVisualElement.Clear();
         rootVisualElement.Add(hostButton);
         rootVisualElement.Add(clientButton);
-        rootVisualElement.Add(serverButton);
-        rootVisualElement.Add(statusLabel);
 
         hostButton.clicked += OnHostButtonClicked;
         clientButton.clicked += OnClientButtonClicked;
-        serverButton.clicked += OnServerButtonClicked;
     }
 
     void Start()
@@ -48,17 +42,16 @@ public class HelloWorldManager : MonoBehaviour
         UpdateUI();
     }
 
+    // Gets rid of buttons
     void OnDisable()
     {
         hostButton.clicked -= OnHostButtonClicked;
         clientButton.clicked -= OnClientButtonClicked;
-        serverButton.clicked -= OnServerButtonClicked;
     }
 
-    // Makes single instance of the host, client, or server
+    // Makes single instance of the host and client on button click
     void OnHostButtonClicked() => NetworkManager.Singleton.StartHost();
     void OnClientButtonClicked() => NetworkManager.Singleton.StartClient();
-    void OnServerButtonClicked() => NetworkManager.Singleton.StartServer();
 
     private Button CreateButton(string name, string text)
     {
@@ -72,34 +65,23 @@ public class HelloWorldManager : MonoBehaviour
         return button;
     }
 
-    private Label CreateLabel(string name, string content)
-    {
-        var label = new Label();
-        label.name = name;
-        label.text = content;
-        label.style.color = Color.black;
-        label.style.fontSize = 18;
-        return label;
-    }
-
     void UpdateUI()
     {
+        // If there is no client, disables buttons
         if (NetworkManager.Singleton == null)
         {
             SetStartButtons(false);
-            SetStatusText("NetworkManager not found");
             return;
         }
 
-        if (!NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer)
+        // If there is the host, shows buttons
+        if (!NetworkManager.Singleton.IsClient)
         {
             SetStartButtons(true);
-            SetStatusText("Not Connected");
         }
         else
         {
             SetStartButtons(false);
-            UpdateStatusLabels();
         }
     }
 
@@ -107,31 +89,25 @@ public class HelloWorldManager : MonoBehaviour
     {
         hostButton.style.display = state ? DisplayStyle.Flex : DisplayStyle.None;
         clientButton.style.display = state ? DisplayStyle.Flex : DisplayStyle.None;
-        serverButton.style.display = state ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
-    void SetStatusText(string text) => statusLabel.text = text;
-
-    void UpdateStatusLabels()
-    {
-        var mode = NetworkManager.Singleton.IsHost ? "Host" : NetworkManager.Singleton.IsServer ? "Server" : "Client";
-        string transport = "Transport: " + NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetType().Name;
-        string modeText = "Mode: " + mode;
-        SetStatusText($"{transport}\n{modeText}");
-    }
 
     void SubmitNewPosition()
     {
-        if (NetworkManager.Singleton.IsServer && !NetworkManager.Singleton.IsClient)
+        // Checks if the current instance is a client or host
+        if (!NetworkManager.Singleton.IsClient)
         {
+            // Loop through each client's ID
             foreach (ulong uid in NetworkManager.Singleton.ConnectedClientsIds)
             {
+                // Gets Network object associated with ID and the control script
                 var playerObject = NetworkManager.Singleton.SpawnManager.GetPlayerNetworkObject(uid);
                 var player = playerObject.GetComponent<PlayerControls>();
             }
         }
         else if (NetworkManager.Singleton.IsClient)
         {
+            // Gets Network object associated with local client and the control script
             var playerObject = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
             var player = playerObject.GetComponent<PlayerControls>();
         }
